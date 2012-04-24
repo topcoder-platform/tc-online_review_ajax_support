@@ -664,8 +664,8 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
                 appealResponseComment = new Comment();
                 appealResponseComment.setCommentType(appealResponseCommentType);
                 appealResponseComment.setComment(textes[i]);
-                // appealResponseComment.setExtraInfo(item.getAnswer());
-                appealResponseComment.setExtraInfo(String.valueOf(appealCommentId));
+                appealResponseComment.setExtraInfo(item.getAnswer());
+                
                 appealResponseComment.setAuthor(authorResource.getId());
                 item.addComment(appealResponseComment);
             }
