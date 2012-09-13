@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -10,6 +10,8 @@ import com.cronos.onlinereview.ajax.ConfigurationException;
 import com.topcoder.management.project.Project;
 import com.topcoder.management.project.ProjectManager;
 import com.topcoder.management.resource.NotificationType;
+import com.topcoder.management.resource.Resource;
+import com.topcoder.management.resource.search.ResourceFilterBuilder;
 
 /**
  * <p>
@@ -25,9 +27,8 @@ import com.topcoder.management.resource.NotificationType;
  * This class is immutable an thread safe. any manager class used by this handler is supposed to be thread safe.
  * </p>
  *
- * @author topgear
- * @author assistant
- * @version 1.0.1
+ * @author topgear, assistant, VolodymyrK
+ * @version 1.0.4
  */
 public class SetTimelineNotificationHandler extends CommonHandler {
 
@@ -179,11 +180,11 @@ public class SetTimelineNotificationHandler extends CommonHandler {
         // check whether is one of the user's projects
         try {
             if (!accessible) {
-                // get the user's projects
-                Project[] projects = projectManager.getUserProjects(userId.longValue());
-                // find the project
-                for (int i = 0; i < projects.length; i++) {
-                    if (projects[i].getId() == projectId) {
+                // get the project's resources
+                Resource[] resources = getResourceManager().searchResources(ResourceFilterBuilder.createProjectIdFilter(projectId));
+                for (Resource resource : resources) {
+                    String paymentStr = (String) resource.getProperty("External Reference ID");
+                    if (String.valueOf(userId.longValue()).equals(paymentStr)) {
                         accessible = true;
                         break;
                     }
