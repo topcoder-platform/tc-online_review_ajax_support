@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -16,7 +16,7 @@ import com.topcoder.search.builder.filter.AndFilter;
 import com.topcoder.search.builder.filter.Filter;
 import com.topcoder.util.log.Level;
 import com.topcoder.util.log.Log;
-import com.topcoder.util.log.LogFactory;
+import com.topcoder.util.log.LogManager;
 import com.topcoder.util.objectfactory.ObjectFactory;
 
 /**
@@ -37,7 +37,7 @@ import com.topcoder.util.objectfactory.ObjectFactory;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.0.1
+ * @version 1.0.6
  */
 public abstract class CommonHandler implements AjaxRequestHandler {
 
@@ -50,7 +50,7 @@ public abstract class CommonHandler implements AjaxRequestHandler {
     /**
      * The logger.
      */
-    private static final Log logger = LogFactory.getLog(CommonHandler.class.getName());
+    private static final Log logger = LogManager.getLog(CommonHandler.class.getName());
     
     /**
      * <p>
@@ -84,7 +84,7 @@ public abstract class CommonHandler implements AjaxRequestHandler {
 
             resourceManager = (ResourceManager) factory.createObject(ResourceManager.class);
 
-            logger.log(Level.INFO, "create ResourceManager from objectfactory with its class type.");
+            logger.log(Level.DEBUG, "create ResourceManager from objectfactory with its class type.");
             // get all the resource roles
             ResourceRole[] roles = resourceManager.getAllResourceRoles();
 

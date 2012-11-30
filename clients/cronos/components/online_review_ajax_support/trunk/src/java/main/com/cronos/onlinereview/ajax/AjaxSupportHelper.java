@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
 import com.topcoder.util.log.Level;
 import com.topcoder.util.log.Log;
-import com.topcoder.util.log.LogFactory;
+import com.topcoder.util.log.LogManager;
 import com.topcoder.util.objectfactory.InvalidClassSpecificationException;
 import com.topcoder.util.objectfactory.ObjectFactory;
 import com.topcoder.util.objectfactory.SpecificationFactory;
@@ -41,14 +41,14 @@ import java.util.Date;
  *
  * @author topgear
  * @author assistant
- * @version 1.0.1
+ * @version 1.0.6
  */
 public final class AjaxSupportHelper {
 
 	/**
      * The logger.
      */
-    private static final Log logger = LogFactory.getLog(AjaxSupportHelper.class.getName());
+    private static final Log logger = LogManager.getLog(AjaxSupportHelper.class.getName());
     
     /**
      * Represents the namespace to create the object factory.
@@ -82,7 +82,7 @@ public final class AjaxSupportHelper {
             // create an object factory that uses only the specification
             ObjectFactory factory = new ObjectFactory(specFactory, ObjectFactory.SPECIFICATION_ONLY);
 
-            logger.log(Level.INFO, "Create objectfactory instance from namespace:" + NAMESPACE);
+            logger.log(Level.DEBUG, "Create objectfactory instance from namespace:" + NAMESPACE);
             return factory;
         } catch (SpecificationConfigurationException e) {
             throw new ConfigurationException("Can't create object factory.", e);
@@ -190,7 +190,7 @@ public final class AjaxSupportHelper {
         AjaxResponse resp = new AjaxResponse(type, status, null);
 
         // log it
-        Log log = LogFactory.getLog();
+        Log log = LogManager.getLog();
         log.log(Level.ERROR, type + " : " + status);
         log.log(Level.ERROR, type + " : " + message);
         if (misc != null) {
@@ -235,7 +235,7 @@ public final class AjaxSupportHelper {
         AjaxResponse resp = new AjaxResponse(type, status, data);
 
         // log it
-        Log log = LogFactory.getLog();
+        Log log = LogManager.getLog();
         log.log(Level.INFO, type + " : " + status);
         log.log(Level.INFO, type + " : " + message);
         log.log(Level.INFO, type + " : " + misc);

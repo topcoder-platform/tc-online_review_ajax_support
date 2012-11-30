@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -20,7 +20,7 @@ import com.topcoder.project.phases.PhaseStatus;
 import com.topcoder.project.phases.PhaseType;
 import com.topcoder.util.log.Level;
 import com.topcoder.util.log.Log;
-import com.topcoder.util.log.LogFactory;
+import com.topcoder.util.log.LogManager;
 
 /**
  * <p>
@@ -40,10 +40,10 @@ import com.topcoder.util.log.LogFactory;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.0.5
+ * @version 1.0.6
  */
 public class PlaceAppealHandler extends ReviewCommonHandler {
-	private static final com.topcoder.util.log.Log log = com.topcoder.util.log.LogFactory
+	private static final com.topcoder.util.log.Log log = com.topcoder.util.log.LogManager
 			.getLog(PlaceAppealHandler.class.getName());
 	
     /**
