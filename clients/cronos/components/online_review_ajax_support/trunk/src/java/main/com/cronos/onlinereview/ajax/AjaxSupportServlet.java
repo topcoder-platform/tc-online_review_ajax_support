@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
@@ -7,7 +7,7 @@ import com.topcoder.util.config.ConfigManager;
 import com.topcoder.util.config.UnknownNamespaceException;
 import com.topcoder.util.log.Level;
 import com.topcoder.util.log.Log;
-import com.topcoder.util.log.LogFactory;
+import com.topcoder.util.log.LogManager;
 import com.topcoder.util.objectfactory.InvalidClassSpecificationException;
 import com.topcoder.util.objectfactory.ObjectFactory;
 
@@ -50,7 +50,7 @@ import java.util.Map;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.0.1
+ * @version 1.0.6
  */
 public final class AjaxSupportServlet extends HttpServlet {
 	/**
@@ -70,7 +70,7 @@ public final class AjaxSupportServlet extends HttpServlet {
     /**
      * The logger.
      */
-    private static final Log logger = LogFactory.getLog(AjaxSupportServlet.class.getName());
+    private static final Log logger = LogManager.getLog(AjaxSupportServlet.class.getName());
     
     /**
      * <p>
@@ -114,7 +114,7 @@ public final class AjaxSupportServlet extends HttpServlet {
      */
     public void init(ServletConfig config) throws ServletException {
 
-    	logger.log(Level.INFO, "Init Ajax Support Servlet from namespace:" + NAMESPACE);
+    	logger.log(Level.DEBUG, "Init Ajax Support Servlet from namespace:" + NAMESPACE);
         super.init(config);
 
         // create a new instance of ConfigManager class
@@ -129,7 +129,7 @@ public final class AjaxSupportServlet extends HttpServlet {
                 throw new ServletException("The UserIdAttributeName is required.");
             }
 
-            logger.log(Level.INFO, "Get property[" + USER_ID_PROPERTY_NAME
+            logger.log(Level.DEBUG, "Get property[" + USER_ID_PROPERTY_NAME
             		+ "] with value[" + userIdAttributeName + "] from namespace:" + NAMESPACE);
             ObjectFactory factory = AjaxSupportHelper.createObjectFactory();
 
@@ -142,7 +142,7 @@ public final class AjaxSupportServlet extends HttpServlet {
                     	logger.log(Level.FATAL, "The handler name should not be null/empty in namespace:" + NAMESPACE);
                         throw new ServletException("The handler name should not be null/empty.");
                     }
-                    logger.log(Level.INFO, "Get property array [" + HANDLERS_PROPERTY
+                    logger.log(Level.DEBUG, "Get property array [" + HANDLERS_PROPERTY
                     		+ "] with one value :" + handlerNames[i] + " from namespace:" + NAMESPACE);
                     AjaxRequestHandler handler = (AjaxRequestHandler) factory.createObject(handlerNames[i]);
                     this.handlers.put(handlerNames[i], handler);
