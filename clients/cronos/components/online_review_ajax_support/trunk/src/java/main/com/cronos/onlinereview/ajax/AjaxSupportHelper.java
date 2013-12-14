@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
@@ -41,7 +41,7 @@ import java.util.Date;
  *
  * @author topgear
  * @author assistant
- * @version 1.0.6
+ * @version 1.1
  */
 public final class AjaxSupportHelper {
 
@@ -216,7 +216,7 @@ public final class AjaxSupportHelper {
      * @return The created ajax response object
      * @throws IllegalArgumentException if type/status is null/empty
      */
-    public static AjaxResponse createAndLogSucceess(String type, String status,
+    public static AjaxResponse createAndLogSuccess(String type, String status,
             String message, Object data, Object misc) {
         if (type == null) {
             throw new IllegalArgumentException("The type should not be null.");
@@ -294,7 +294,7 @@ public final class AjaxSupportHelper {
      *
      * @param cause the exception to be recorded
      *
-     * @return stack strace
+     * @return stack trace
      */
     public static String getExceptionStackTrace(Throwable cause) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

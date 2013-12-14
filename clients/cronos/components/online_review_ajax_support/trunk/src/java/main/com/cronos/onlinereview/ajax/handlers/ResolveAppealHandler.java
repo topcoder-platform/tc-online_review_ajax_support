@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -37,7 +37,7 @@ import com.topcoder.project.phases.PhaseType;
  *
  * @author topgear
  * @author assistant
- * @version 1.0.5
+ * @version 1.1
  */
 public class ResolveAppealHandler extends ReviewCommonHandler {
 
@@ -219,15 +219,15 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
             CommentType recommended = null;
             CommentType required = null;
             CommentType appealResponse = null;
-            for (int i = 0; i < commentTypes.length; i++) {
-                if (commentTypes[i].getName().equals(COMMENT_TYPE_COMMENT)) {
-                    comment = commentTypes[i];
-                } else if (commentTypes[i].getName().equals(COMMENT_TYPE_RECOMMENDED)) {
-                    recommended = commentTypes[i];
-                } else if (commentTypes[i].getName().equals(COMMENT_TYPE_REQUIRED)) {
-                    required = commentTypes[i];
-                } else if (commentTypes[i].getName().equals(COMMENT_TYPE_APPEAL_RESPONSE)) {
-                    appealResponse = commentTypes[i];
+            for (CommentType commentType : commentTypes) {
+                if (commentType.getName().equals(COMMENT_TYPE_COMMENT)) {
+                    comment = commentType;
+                } else if (commentType.getName().equals(COMMENT_TYPE_RECOMMENDED)) {
+                    recommended = commentType;
+                } else if (commentType.getName().equals(COMMENT_TYPE_REQUIRED)) {
+                    required = commentType;
+                } else if (commentType.getName().equals(COMMENT_TYPE_APPEAL_RESPONSE)) {
+                    appealResponse = commentType;
                 }
             }
             if (comment != null) {
@@ -257,13 +257,13 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
             long appealResponseTypeId = 0;
             boolean foundReview = false;
             boolean foundAppeal = false;
-            for (int i = 0; i < phaseTypes.length; i++) {
-                if (phaseTypes[i].getName().equals(TYPE_REVIEW)) {
-                    reviewTypeId = phaseTypes[i].getId();
+            for (PhaseType phaseType : phaseTypes) {
+                if (phaseType.getName().equals(TYPE_REVIEW)) {
+                    reviewTypeId = phaseType.getId();
                     foundReview = true;
                 }
-                if (phaseTypes[i].getName().equals(TYPE_APPEALS_RESPONSE)) {
-                    appealResponseTypeId = phaseTypes[i].getId();
+                if (phaseType.getName().equals(TYPE_APPEALS_RESPONSE)) {
+                    appealResponseTypeId = phaseType.getId();
                     foundAppeal = true;
                 }
             }
@@ -281,9 +281,9 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
             PhaseStatus[] statuses = getPhaseManager().getAllPhaseStatuses();
             boolean found = false;
             long id = 0;
-            for (int i = 0; i < statuses.length; i++) {
-                if (statuses[i].getName().equals(STATUS_OPEN)) {
-                    id = statuses[i].getId();
+            for (PhaseStatus status : statuses) {
+                if (status.getName().equals(STATUS_OPEN)) {
+                    id = status.getId();
                     found = true;
                     break;
                 }
@@ -318,11 +318,8 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
             throw new IllegalArgumentException("The request should not be null.");
         }
         // check all the required parameters
-        long reviewId = 0;
-        long itemId = 0;
-        String status = null;
-        String answer = null;
-        String text = null;
+        long reviewId, itemId;
+        String status, answer, text;
 
         // ReviewID
         try {
@@ -365,7 +362,7 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
         }
 
         // check the user is the author of the review
-        Review review = null;
+        Review review;
         try {
             review = getReviewManager().getReview(reviewId);
         } catch (Exception e) {
@@ -380,7 +377,7 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
         }
 
         // get the reviewer resource
-        Resource reviewerResource = null;
+        Resource reviewerResource;
         try {
             reviewerResource = getResourceManager().getResource(review.getAuthor());
         } catch (Exception e) {
@@ -390,6 +387,10 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
                     + "\treviwer id :" + review.getAuthor(), e);
         }
         // validate the review resource
+        if (reviewerResource == null) {
+            return AjaxSupportHelper.createAndLogError(request.getType(),
+                    BUSINESS_ERROR, "Error when finding the resource.", "Review ID : " + reviewId);
+        }
         if (reviewerResource.getPhase() == null) {
             return AjaxSupportHelper.createAndLogError(request.getType(),
                     PHASE_ERROR, "The reviewerResource should have a phase.",
@@ -397,38 +398,38 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
                     + "\treviwer id :" + review.getAuthor());
         }
 
-        // check the user has the role of "Reviewer"
-        try {
-            if (!(checkResourceHasRole(reviewerResource, "Reviewer")
-                  || checkResourceHasRole(reviewerResource, "Accuracy Reviewer")
-                  || checkResourceHasRole(reviewerResource, "Failure Reviewer")
-                  || checkResourceHasRole(reviewerResource, "Stress Reviewer"))) {
-                return AjaxSupportHelper.createAndLogError(request.getType(),
-                        ROLE_ERROR, "The user should be a reviewer.",
-                        "User id : " + userId + "\treview id : " + reviewId);
-            }
-        } catch (ResourceException e) {
+        // Check that the logged user is actually the review author.
+        if (!checkResourceAssignedToUser(reviewerResource, userId)) {
             return AjaxSupportHelper.createAndLogError(request.getType(),
-                    BUSINESS_ERROR, "Can't check the user role.",
-                    "User id : " + userId + "\tsubmission id : " + reviewId, e);
+                    ROLE_ERROR, "The user is wrong.",
+                    "User id : " + userId + "\tReview ID : " + reviewId);
         }
 
+        // check the user has the role of "Reviewer"
+        if (!(checkResourceHasRole(reviewerResource, "Reviewer")
+              || checkResourceHasRole(reviewerResource, "Accuracy Reviewer")
+              || checkResourceHasRole(reviewerResource, "Failure Reviewer")
+              || checkResourceHasRole(reviewerResource, "Stress Reviewer"))) {
+            return AjaxSupportHelper.createAndLogError(request.getType(),
+                    ROLE_ERROR, "The user should be a reviewer.",
+                    "User id : " + userId + "\treview id : " + reviewId);
+        }
 
-        Phase[] phases = null;
+        Phase[] phases;
         try {
-            phases = getPhaseManager().getPhases(reviewerResource.getProject().longValue()).getAllPhases();
+            phases = getPhaseManager().getPhases(reviewerResource.getProject()).getAllPhases();
         } catch (Exception e) {
             return AjaxSupportHelper.createAndLogError(request.getType(),
                     BUSINESS_ERROR, "Can't get phases.",
                     "User id : " + userId + "\treview id : " + reviewId
-                    + "\tproject id :" + reviewerResource.getProject().longValue(), e);
+                    + "\tproject id :" + reviewerResource.getProject(), e);
         }
 
         // get the review phase
         Phase reviewPhase = null;
-        for (int i = 0; i < phases.length; i++) {
-            if (phases[i].getPhaseType().getId() == reviewPhaseTypeId) {
-                reviewPhase = phases[i];
+        for (Phase phase : phases) {
+            if (phase.getPhaseType().getId() == reviewPhaseTypeId) {
+                reviewPhase = phase;
                 break;
             }
         }
@@ -439,7 +440,7 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
         }
 
         // validate the phase
-        if (reviewPhase.getId() != reviewerResource.getPhase().longValue()) {
+        if (reviewPhase.getId() != reviewerResource.getPhase()) {
             return AjaxSupportHelper.createAndLogError(request.getType(),
                     ROLE_ERROR, "The reviewerResource should have a phase the same with the review phase.",
                     "User id : " + userId + "\treview id : " + reviewId
@@ -448,9 +449,9 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
 
         // get the appeal response phase
         Phase appealResponsePhase = null;
-        for (int i = 0; i < phases.length; i++) {
-            if (phases[i].getPhaseType().getId() == appealsResponsePhaseTypeId) {
-                appealResponsePhase = phases[i];
+        for (Phase phase : phases) {
+            if (phase.getPhaseType().getId() == appealsResponsePhaseTypeId) {
+                appealResponsePhase = phase;
                 break;
             }
         }
@@ -473,9 +474,9 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
 
         // find the item with itemId
         Item item = null;
-        for (int i = 0; i < items.length; i++) {
-            if (items[i].getId() == itemId) {
-                item = items[i];
+        for (Item itemTmp : items) {
+            if (itemTmp.getId() == itemId) {
+                item = itemTmp;
                 break;
             }
         }
@@ -490,9 +491,9 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
         Comment appealResponseComment = null;
 
         // find the one with type appealResponseCommentType
-        for (int i = 0; i < comments.length; i++) {
-            if (comments[i].getCommentType().getId() == this.appealResponseCommentType.getId()) {
-                appealResponseComment = comments[i];
+        for (Comment comment : comments) {
+            if (comment.getCommentType().getId() == this.appealResponseCommentType.getId()) {
+                appealResponseComment = comment;
                 break;
             }
         }
@@ -513,9 +514,9 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
 
         // find the comment with appeal comment type
         Comment appealComment = null;
-        for (int i = 0; i < comments.length; i++) {
-            if (comments[i].getCommentType().getName().equals("Appeal")) {
-                appealComment = comments[i];
+        for (Comment comment : comments) {
+            if (comment.getCommentType().getName().equals("Appeal")) {
+                appealComment = comment;
                 break;
             }
         }
@@ -530,8 +531,8 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
         item.setAnswer(answer);
 
         // WB - allow modify the type of the original comments
-        for (Iterator itr = request.getAllParameterNames().iterator(); itr.hasNext();) {
-            String paramName = (String) itr.next();
+        for (Object param : request.getAllParameterNames()) {
+            String paramName = (String) param;
             if (!paramName.startsWith("CommentType")) {
                 continue;
             }
@@ -540,9 +541,9 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
 
             // find the original comment
             Comment originalComment = null;
-            for (int i = 0; i < comments.length; i++) {
-                if (commentId.equals(String.valueOf(comments[i].getId()))) {
-                    originalComment = comments[i];
+            for (Comment comment : comments) {
+                if (commentId.equals(String.valueOf(comment.getId()))) {
+                    originalComment = comment;
                     break;
                 }
             }
@@ -584,7 +585,7 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
             // calculate the score
             float score = calculationManager.getScore(card, review);
 
-            review.setScore(new Float(score));
+            review.setScore(score);
         } catch (Exception e) {
             return AjaxSupportHelper.createAndLogError(request.getType(),
                     BUSINESS_ERROR, "Error in calculating score.",
@@ -600,7 +601,7 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
         }
 
         // succeed
-        return AjaxSupportHelper.createAndLogSucceess(request.getType(), SUCCESS,
+        return AjaxSupportHelper.createAndLogSuccess(request.getType(), SUCCESS,
                 "Suceeded to response appeal.", review.getScore(), "ResponseAppeal."
                 + "\tuser id : " + userId + "review id :" + review.getId()
                 + "\titem id : " + item.getId());
