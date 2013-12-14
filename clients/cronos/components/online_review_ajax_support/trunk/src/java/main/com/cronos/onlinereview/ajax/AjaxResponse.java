@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
@@ -24,7 +24,7 @@ package com.cronos.onlinereview.ajax;
  *
  * @author topgear
  * @author assistant
- * @version 1.0.1
+ * @version 1.1
  */
 public final class AjaxResponse {
 
@@ -121,7 +121,7 @@ public final class AjaxResponse {
 
     /**
      * <p>
-     * Transforms this Ajax response to its XML representation, and optionaly inclue the XML header.
+     * Transforms this Ajax response to its XML representation, and optionally include the XML header.
      * </p>
      *
      * @return the XML representation of the response
@@ -130,7 +130,7 @@ public final class AjaxResponse {
     public String toXml(boolean withHeader) {
 
         // use a StringBuffer to create the xml contents
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         // if withHeader is true, add the header
         if (withHeader) {

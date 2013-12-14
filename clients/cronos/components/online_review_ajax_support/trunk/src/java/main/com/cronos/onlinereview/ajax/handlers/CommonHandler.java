@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -24,7 +24,7 @@ import com.topcoder.util.objectfactory.ObjectFactory;
  * Defines a common Ajax request handler capable of getting a user's role using its ID,
  * and the Resource Management component;
  * this class implements the AjaxRequestHandler interface,
- * and keeps an instance of RessourceManager class in order to get resource related data.
+ * and keeps an instance of ResourceManager class in order to get resource related data.
  * <br>
  * This class's main purpose is to simplify Ajax request handlers' implementation.
  * </p>
@@ -37,7 +37,7 @@ import com.topcoder.util.objectfactory.ObjectFactory;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.0.6
+ * @version 1.1
  */
 public abstract class CommonHandler implements AjaxRequestHandler {
 
@@ -91,9 +91,9 @@ public abstract class CommonHandler implements AjaxRequestHandler {
             // find the role with name "manager" and save its id
             boolean found = false;
             long id = 0;
-            for (int i = 0; i < roles.length; i++) {
-                if ("Manager".equals(roles[i].getName())) {
-                    id = roles[i].getId();
+            for (ResourceRole role : roles) {
+                if ("Manager".equals(role.getName())) {
+                    id = role.getId();
                     found = true;
                     break;
                 }
@@ -113,10 +113,9 @@ public abstract class CommonHandler implements AjaxRequestHandler {
      * @param resource the resource to check
      * @return true if the resource is assigned to the user
      * @param userId the id of the user to check
-     * @throws ResourceException if the resource manager has thrown an exception
      * @throws IllegalArgumentException if resource parameter is null
      */
-    protected boolean checkResourceAssignedToUser(Resource resource, long userId) throws ResourceException {
+    protected boolean checkResourceAssignedToUser(Resource resource, long userId) {
         if (resource == null) {
             throw new IllegalArgumentException("The resource can't be null.");
         }
@@ -136,10 +135,9 @@ public abstract class CommonHandler implements AjaxRequestHandler {
      * @return true if the user has the role
      * @param resource the resource of the user to check its role
      * @param role the role to check for
-     * @throws ResourceException if the resource manager has thrown an exception
      * @throws IllegalArgumentException if role parameter is null or empty String
      */
-    protected boolean checkResourceHasRole(Resource resource, String role) throws ResourceException {
+    protected boolean checkResourceHasRole(Resource resource, String role) {
         if (resource == null) {
             throw new IllegalArgumentException("The resource can't be null");
         }
@@ -180,8 +178,8 @@ public abstract class CommonHandler implements AjaxRequestHandler {
         Filter extensionPropertyValueFilter
             = ResourceFilterBuilder.createExtensionPropertyValueFilter(Long.toString(userId));
 
-        Filter bundle = new AndFilter(Arrays.asList(new Filter[] { noProjectFilter, resourceRoleIdFilter,
-                extensionPropertyNameFilter, extensionPropertyValueFilter }));
+        Filter bundle = new AndFilter(Arrays.asList(noProjectFilter, resourceRoleIdFilter,
+                extensionPropertyNameFilter, extensionPropertyValueFilter));
 
         // find the resources using the bundle
         try {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -28,7 +28,7 @@ import com.topcoder.management.resource.search.ResourceFilterBuilder;
  * </p>
  *
  * @author topgear, assistant, VolodymyrK
- * @version 1.0.4
+ * @version 1.1
  */
 public class SetTimelineNotificationHandler extends CommonHandler {
 
@@ -92,9 +92,9 @@ public class SetTimelineNotificationHandler extends CommonHandler {
             NotificationType[] types = getResourceManager().getAllNotificationTypes();
             boolean found = false;
             long id = 0;
-            for (int i = 0; i < types.length; i++) {
-                if (types[i].getName().equals("Timeline Notification")) {
-                    id = types[i].getId();
+            for (NotificationType type : types) {
+                if (type.getName().equals("Timeline Notification")) {
+                    id = type.getId();
                     found = true;
                     break;
                 }
@@ -128,8 +128,8 @@ public class SetTimelineNotificationHandler extends CommonHandler {
         }
 
         // check the request parameters
-        long projectId = 0;
-        String status = null;
+        long projectId;
+        String status;
 
         try {
             projectId = request.getParameterAsLong("ProjectId");
@@ -152,13 +152,11 @@ public class SetTimelineNotificationHandler extends CommonHandler {
                     "Doesn't login or expired.", "SetTimelineNotification. User id : " + userId);
         }
 
-        // check whether the project is : "public", one of the user's projects, the user has global manager role
-        // if doesn't fit any of the three, create and return a "Role error"
+        // check whether the project is : one of the user's projects or the user has global manager role
+        // if doesn't fit any of the two, create and return a "Role error"
         boolean accessible = false;
 
-        // check whether this is public
-        // get the project
-        Project project = null;
+        Project project;
         try {
             project = this.projectManager.getProject(projectId);
         } catch (Exception e) {
@@ -172,22 +170,15 @@ public class SetTimelineNotificationHandler extends CommonHandler {
                     + "\tproject id : " + projectId);
         }
 
-        // check the property
-        if (project.getProperty("Public") != null && project.getProperty("Public").equals("Yes")) {
-            accessible = true;
-        }
-
         // check whether is one of the user's projects
         try {
-            if (!accessible) {
-                // get the project's resources
-                Resource[] resources = getResourceManager().searchResources(ResourceFilterBuilder.createProjectIdFilter(projectId));
-                for (Resource resource : resources) {
-                    String paymentStr = (String) resource.getProperty("External Reference ID");
-                    if (String.valueOf(userId.longValue()).equals(paymentStr)) {
-                        accessible = true;
-                        break;
-                    }
+            // get the project's resources
+            Resource[] resources = getResourceManager().searchResources(ResourceFilterBuilder.createProjectIdFilter(projectId));
+            for (Resource resource : resources) {
+                String paymentStr = (String) resource.getProperty("External Reference ID");
+                if (String.valueOf(userId.longValue()).equals(paymentStr)) {
+                    accessible = true;
+                    break;
                 }
             }
         } catch (Exception e) {
@@ -198,7 +189,7 @@ public class SetTimelineNotificationHandler extends CommonHandler {
         // check whether the user has global manager role
         if (!accessible) {
             try {
-                if (checkUserHasGlobalManagerRole(userId.longValue())) {
+                if (checkUserHasGlobalManagerRole(userId)) {
                     accessible = true;
                 }
             } catch (ResourceException e) {
@@ -217,13 +208,13 @@ public class SetTimelineNotificationHandler extends CommonHandler {
         try {
             if (status.equals("On")) {
                 getResourceManager().addNotifications(
-                        new long[] {userId.longValue()},
+                        new long[] {userId},
                         projectId,
                         timelineNotificationId,
                         userId.toString());
             } else {
                 getResourceManager().removeNotifications(
-                        new long[] {userId.longValue()},
+                        new long[] {userId},
                         projectId,
                         timelineNotificationId,
                         userId.toString());
@@ -234,9 +225,9 @@ public class SetTimelineNotificationHandler extends CommonHandler {
                     + userId + "\tproject id : " + projectId + "\ttimelineNotifcationId : " + timelineNotificationId, e);
         }
 
-        return AjaxSupportHelper.createAndLogSucceess(request.getType(), SUCCESS,
-                "Suceeded to set timeline notification.", null, "SetTimelineNotification. User id : "
-                + userId + "\tproject id : " + projectId + "\ttimelineNotifcationId : " + timelineNotificationId);
+        return AjaxSupportHelper.createAndLogSuccess(request.getType(), SUCCESS,
+                "Succeeded to set timeline notification.", null, "SetTimelineNotification. User id : "
+                + userId + "\tproject id : " + projectId + "\ttimelineNotificationId : " + timelineNotificationId);
 
     }
 }

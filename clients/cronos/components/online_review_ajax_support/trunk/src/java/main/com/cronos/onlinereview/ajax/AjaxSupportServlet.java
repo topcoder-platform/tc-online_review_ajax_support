@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
@@ -10,13 +10,13 @@ import com.topcoder.util.log.Log;
 import com.topcoder.util.log.LogManager;
 import com.topcoder.util.objectfactory.InvalidClassSpecificationException;
 import com.topcoder.util.objectfactory.ObjectFactory;
+import com.topcoder.web.common.security.SSOCookieService;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
@@ -50,7 +50,7 @@ import java.util.Map;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.0.6
+ * @version 1.1
  */
 public final class AjaxSupportServlet extends HttpServlet {
 	/**
@@ -59,9 +59,9 @@ public final class AjaxSupportServlet extends HttpServlet {
     private static final String HANDLERS_PROPERTY = "Handlers";
 
     /**
-     * Represents the property name of user id attribute.
+     * Represents the property name for SSO Cookie Service object factory key.
      */
-    private static final String USER_ID_PROPERTY_NAME = "UserIdAttributeName";
+    private static final String SSO_COOKIE_SERVICE_KEY_PROPERTY = "SSOCookieServiceKey";
 
     /**
      * Represents the namespace to retrieve the properties.
@@ -71,7 +71,15 @@ public final class AjaxSupportServlet extends HttpServlet {
      * The logger.
      */
     private static final Log logger = LogManager.getLog(AjaxSupportServlet.class.getName());
-    
+
+    /**
+     * <p>An <code>AuthCookieManager</code> to be used for user authentication based on cookies.</p>
+     *
+     * @since 1.1
+     */
+    private static SSOCookieService ssoCookieService;
+
+   
     /**
      * <p>
      * The Ajax request handlers map, as defined in the configuration.
@@ -84,16 +92,7 @@ public final class AjaxSupportServlet extends HttpServlet {
      * </ul>
      * </p>
      */
-    private final Map handlers = new HashMap();
-
-    /**
-     * <p>
-     * Represents the user Id attribute's name used to store the user ID in the HttpSession.
-     * This variable is mutable, it is initialized by the "init" method to a not null and not empty String,
-     * but must never assigned a new value after that. the "destroy" method put it to null.
-     * </p>
-     */
-    private String userIdAttributeName;
+    private final Map<String, AjaxRequestHandler> handlers = new HashMap<String, AjaxRequestHandler>();
 
     /**
      * <p>
@@ -121,31 +120,23 @@ public final class AjaxSupportServlet extends HttpServlet {
         ConfigManager cm = ConfigManager.getInstance();
 
         try {
-            // get the userId from the config manager
-            this.userIdAttributeName = cm.getString(NAMESPACE, USER_ID_PROPERTY_NAME);
-
-            if (userIdAttributeName == null || userIdAttributeName.trim().length() == 0) {
-            	logger.log(Level.FATAL, "The UserIdAttributeName is missing in the namespace:" + NAMESPACE);
-                throw new ServletException("The UserIdAttributeName is required.");
-            }
-
-            logger.log(Level.DEBUG, "Get property[" + USER_ID_PROPERTY_NAME
-            		+ "] with value[" + userIdAttributeName + "] from namespace:" + NAMESPACE);
             ObjectFactory factory = AjaxSupportHelper.createObjectFactory();
 
+            String ssoCookieServiceKey = ConfigManager.getInstance().getString(NAMESPACE, SSO_COOKIE_SERVICE_KEY_PROPERTY);
+            ssoCookieService = (SSOCookieService) factory.createObject(ssoCookieServiceKey);
             
             // get the list of all the Ajax request handlers names from the config manager
             String[] handlerNames = cm.getStringArray(NAMESPACE, HANDLERS_PROPERTY);
             if (handlerNames != null) {
-            	for (int i = 0; i < handlerNames.length; i++) {
-                    if (handlerNames[i] == null || handlerNames[i].trim().length() == 0) {
+            	for (String handlerName : handlerNames) {
+                    if (handlerName == null || handlerName.trim().length() == 0) {
                     	logger.log(Level.FATAL, "The handler name should not be null/empty in namespace:" + NAMESPACE);
                         throw new ServletException("The handler name should not be null/empty.");
                     }
                     logger.log(Level.DEBUG, "Get property array [" + HANDLERS_PROPERTY
-                    		+ "] with one value :" + handlerNames[i] + " from namespace:" + NAMESPACE);
-                    AjaxRequestHandler handler = (AjaxRequestHandler) factory.createObject(handlerNames[i]);
-                    this.handlers.put(handlerNames[i], handler);
+                    		+ "] with one value :" + handlerName + " from namespace:" + NAMESPACE);
+                    AjaxRequestHandler handler = (AjaxRequestHandler) factory.createObject(handlerName);
+                    this.handlers.put(handlerName, handler);
                 }
             }
         } catch (UnknownNamespaceException e) {
@@ -155,8 +146,8 @@ public final class AjaxSupportServlet extends HttpServlet {
         	logger.log(Level.FATAL, "Can not create object.\n" + AjaxSupportHelper.getExceptionStackTrace(e));
             throw new ServletException("Can't create handler : " + e.getMessage() + ", " + e.getCause().getMessage(), e);
         } catch (ConfigurationException e) {
-        	logger.log(Level.FATAL, "Can not create object.\n" + AjaxSupportHelper.getExceptionStackTrace(e));
-            throw new ServletException("Can't create factory.", e);
+        	logger.log(Level.FATAL, "Can not create object or sso cookie service.\n" + AjaxSupportHelper.getExceptionStackTrace(e));
+            throw new ServletException("Can't create factory or sso cookie service.", e);
         }
     }
 
@@ -166,7 +157,6 @@ public final class AjaxSupportServlet extends HttpServlet {
      * </p>
      */
     public void destroy() {
-        this.userIdAttributeName = null;
         this.handlers.clear();
     }
 
@@ -182,22 +172,13 @@ public final class AjaxSupportServlet extends HttpServlet {
      */
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
-        // get the HttpSession from the request
-        HttpSession session = request.getSession(false);
 
-        // the userId
-        Long userId = null;
-
-        // if this session is valid, get the user id from it
-        // otherwise, leave it null
-        if (session != null) {
-            Object obj = session.getAttribute(this.userIdAttributeName);
-            if (obj != null && !(obj instanceof Long)) {
-            	logger.log(Level.ERROR,
-            			"The user id should be Long in session with attribute name:" + userIdAttributeName);
-                throw new ServletException("The user id should be Long.");
-            }
-            userId = (Long) obj;
+        Long userId;
+        try {
+            userId = ssoCookieService.getUserIdFromSSOCookie(request);
+        } catch (Exception e) {
+            logger.log(Level.ERROR, e, "Could not retrieve user ID from SSO cookie.");
+            throw new ServletException("Could not retrieve user ID from SSO cookie.", e);
         }
 
         // get the reader from the request
@@ -208,7 +189,7 @@ public final class AjaxSupportServlet extends HttpServlet {
             AjaxRequest ajaxRequest = AjaxRequest.parse(reader);
 
             // get the handler from the map
-            AjaxRequestHandler handler = (AjaxRequestHandler) handlers.get(ajaxRequest.getType());
+            AjaxRequestHandler handler = handlers.get(ajaxRequest.getType());
 
             // if the handler is null, response it with status "request error"
             if (handler == null) {
@@ -226,14 +207,14 @@ public final class AjaxSupportServlet extends HttpServlet {
                 return;
             }
             if (!"success".equalsIgnoreCase(resp.getStatus())) {
-            	StringBuffer buf = new StringBuffer();
-            	for (Iterator i = ajaxRequest.getAllParameterNames().iterator(); i.hasNext();) {
-            		String param = (String) i.next();
-            		buf.append(',')
-            			.append(param)
-            			.append(" = ")
-            			.append(ajaxRequest.getParameter(param));
-            	}
+            	StringBuilder buf = new StringBuilder();
+                for (Object param : ajaxRequest.getAllParameterNames()) {
+                    String paramName = (String) param;
+                    buf.append(',')
+                            .append(paramName)
+                            .append(" = ")
+                            .append(ajaxRequest.getParameter(paramName));
+                }
             	logger.log(Level.WARN, "problem handling request, status: " + resp.getStatus() +
             			"\ntype: " + resp.getType() +
             			"\nparams: " + (buf.length() == 0 ? "" : buf.substring(1)) + 
@@ -247,7 +228,6 @@ public final class AjaxSupportServlet extends HttpServlet {
             // if there is a parsing error then create an AjaxResponse containing the error message,
             // use the status "invalid request error"
             AjaxSupportHelper.responseAndLogError("Unknown", "invalid request error", e.getMessage(), response, e);
-            return;
         }
     }
 

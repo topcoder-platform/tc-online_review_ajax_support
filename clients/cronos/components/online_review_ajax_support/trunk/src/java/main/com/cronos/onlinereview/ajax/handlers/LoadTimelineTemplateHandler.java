@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -42,7 +42,7 @@ import java.util.Date;
  *
  * @author topgear
  * @author assistant, TCSDEVELOPER
- * @version 1.0.2
+ * @version 1.1
  */
 public class LoadTimelineTemplateHandler extends CommonHandler {
 
@@ -122,7 +122,7 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
             return AjaxSupportHelper.createAndLogError(request.getType(), INVALID_PARAMETER_ERROR,
                     "The Template name should not be empty.", "LoadTimelineTemplate. " + "User id : " + userId);
         }
-        Date start = null;
+        Date start;
         try {
             start = request.getParameterAsDate("StartDate");
         } catch (ParseException e) {
@@ -138,7 +138,7 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
 
         try {
             // check that the user has the global manager role
-            if (!checkUserHasGlobalManagerRole(userId.longValue())) {
+            if (!checkUserHasGlobalManagerRole(userId)) {
                 // if doesn't have the role, return an error response
                 return AjaxSupportHelper.createAndLogError(request.getType(), ROLE_ERROR,
                         "User doesn't have the role.", "LoadTimelineTemplate. " + "User id : " + userId);
@@ -152,8 +152,8 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
         // find the template, if not found, return an error response
         String[] names = phaseTemplate.getAllTemplateNames();
         boolean found = false;
-        for (int i = 0; i < names.length; i++) {
-            if (names[i].equals(name)) {
+        for (String nameTmp : names) {
+            if (nameTmp.equals(name)) {
                 found = true;
                 break;
             }
@@ -165,7 +165,7 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
         }
 
         // apply the template
-        Project project = null;
+        Project project;
         try {
             if (start != null) {
                 project = phaseTemplate.applyTemplate(name, start);
@@ -180,7 +180,7 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
         // generate the xml
         String xml = timelineToXml(project);
 
-        return AjaxSupportHelper.createAndLogSucceess(request.getType(), SUCCESS, "succeed to load template",
+        return AjaxSupportHelper.createAndLogSuccess(request.getType(), SUCCESS, "succeed to load template",
                 xml, "LoadTimelineTemplate. " + "User id : " + userId + " Start : " + start);
     }
 
@@ -206,9 +206,9 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
         // loop over all the phases to generate the xml
         Phase[] phases = project.getAllPhases();
         Arrays.sort(phases, new ProjectPhaseComparator());
-        
-        for (int i = 0; i < phases.length; i++) {
-            phaseToXml(phases[i], sb);
+
+        for (Phase phase : phases) {
+            phaseToXml(phase, sb);
         }
 
         sb.append("</phases>");
@@ -256,8 +256,8 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
             sb.append("<dependencies>");
 
             Dependency[] dependencies = phase.getAllDependencies();
-            for (int i = 0; i < dependencies.length; i++) {
-                dependencyToXml(dependencies[i], sb);
+            for (Dependency dependency : dependencies) {
+                dependencyToXml(dependency, sb);
             }
             sb.append("</dependencies>");
         }
@@ -327,8 +327,8 @@ public class LoadTimelineTemplateHandler extends CommonHandler {
 
         /**
          * This method compares its two arguments for order. This method expects that type of
-         * objects passed as arguments is <code>Phase</code>. It then detemines which of the
-         * objects is smaller using <code>compare</code> method from the superclas first, and then
+         * objects passed as arguments is <code>Phase</code>. It then determines which of the
+         * objects is smaller using <code>compare</code> method from the superclass first, and then
          * comparing phases' imaginary rankings if the first comparison does not let determine the
          * order.
          * <p>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
@@ -53,7 +53,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * @author topgear
  * @author assistant
- * @version 1.0.1
+ * @version 1.1
  */
 public final class AjaxRequest {
 
@@ -101,11 +101,11 @@ public final class AjaxRequest {
      * <li>Map Keys - are of type String, they can't be null,
      *                or empty strings, they represents parameters names</li>
      * <li>Map Values - are of type String, they can't be null,
-     *                but emty Strings are accepted, they represents parameters values</li>
+     *                but empty Strings are accepted, they represents parameters values</li>
      * </ul>
      * </p>
      */
-    private final Map parameters = new HashMap();
+    private final Map<String, String> parameters = new HashMap<String, String>();
 
     /**
      * <p>
@@ -117,7 +117,7 @@ public final class AjaxRequest {
      * @throws IllegalArgumentException if type is null, or empty string,
      *                                  or parameters is null or (keys/values) aren't of type String
      */
-    public AjaxRequest(String type, Map parameters) {
+    public AjaxRequest(String type, Map<String, String> parameters) {
 
         // validate the parameters
         if (type == null) {
@@ -130,24 +130,16 @@ public final class AjaxRequest {
             throw new IllegalArgumentException("The parameters should not be null.");
         }
 
-        Set entries = parameters.entrySet();
-        Iterator it = entries.iterator();
 
-        while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry) it.next();
-
+        for (Map.Entry<String,String> entry : parameters.entrySet()) {
             // the key can't be null or empty
-            if (!(entry.getKey() instanceof String)) {
-                throw new IllegalArgumentException("The key must be a string.");
-            }
-            if (((String) entry.getKey()).trim().length() == 0) {
+            if (entry.getKey().trim().length() == 0) {
                 throw new IllegalArgumentException("The key should not be empty.");
             }
 
             // value can't be null but can be empty
-            Object value = entry.getValue();
-            if (!(value instanceof String)) {
-                throw new IllegalArgumentException("The value must be a string.");
+            if (entry.getValue() == null) {
+                throw new IllegalArgumentException("The value must not be null.");
             }
         }
 
@@ -222,7 +214,7 @@ public final class AjaxRequest {
         /**
          * Represents the request parameters.
          */
-        private final Map requestParameters = new HashMap();
+        private final Map<String, String> requestParameters = new HashMap<String, String>();
 
         /**
          * Represents the request parameter name.
@@ -297,8 +289,7 @@ public final class AjaxRequest {
             if (qName.equals("request")) {
                 request = new AjaxRequest(requestType, requestParameters);
             } else if (qName.equals("parameter")) {
-                String parameterValue = sb.toString();
-                requestParameters.put(parameterName, parameterValue);
+                requestParameters.put(parameterName, sb.toString());
             }
         }
 
@@ -340,7 +331,7 @@ public final class AjaxRequest {
      * @return all the parameter names.
      */
     public Set getAllParameterNames() {
-        return new HashSet(parameters.keySet());
+        return new HashSet<String>(parameters.keySet());
     }
 
     /**

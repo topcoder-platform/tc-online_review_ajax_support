@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax;
 
@@ -13,7 +13,7 @@ import com.topcoder.util.errorhandling.BaseException;
  * This exception is:
  * <ul>
  * <li>Thrown by all Ajax request handlers' constructors, if they fail to configure their internal state.</li>
- * <li>Thorwn by AjaxSupportServlet class when it fails to load configuration data, and to create Ajax request handlers;
+ * <li>Thrown by AjaxSupportServlet class when it fails to load configuration data, and to create Ajax request handlers;
  *     AjaxSupportServlet's "init" method wraps this exception in a ServletException, and then thrown it.</li>
  * </ul>
  * </p>
@@ -21,7 +21,7 @@ import com.topcoder.util.errorhandling.BaseException;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.0.1
+ * @version 1.1
  */
 public class ConfigurationException extends BaseException {
 

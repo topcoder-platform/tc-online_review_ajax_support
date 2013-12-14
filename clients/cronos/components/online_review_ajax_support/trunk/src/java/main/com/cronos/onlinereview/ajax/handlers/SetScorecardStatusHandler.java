@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -29,7 +29,7 @@ import com.topcoder.management.scorecard.data.ScorecardStatus;
  *
  * @author topgear
  * @author assistant
- * @version 1.0.1
+ * @version 1.1
  */
 public class SetScorecardStatusHandler extends CommonHandler {
 
@@ -108,11 +108,11 @@ public class SetScorecardStatusHandler extends CommonHandler {
             // get the active and inactive statuses
             ScorecardStatus active = null;
             ScorecardStatus inactive = null;
-            for (int i = 0; i < statuses.length; i++) {
-                if (statuses[i].getName().equals("Active")) {
-                    active = statuses[i];
-                } else if (statuses[i].getName().equals("Inactive")) {
-                    inactive = statuses[i];
+            for (ScorecardStatus status : statuses) {
+                if (status.getName().equals("Active")) {
+                    active = status;
+                } else if (status.getName().equals("Inactive")) {
+                    inactive = status;
                 }
             }
 
@@ -149,8 +149,8 @@ public class SetScorecardStatusHandler extends CommonHandler {
         }
 
         // check the request parameters
-        long scorecardId = 0;
-        String status = null;
+        long scorecardId;
+        String status;
 
         // ScorecardId
         try {
@@ -174,7 +174,7 @@ public class SetScorecardStatusHandler extends CommonHandler {
 
         // check the user has global manager role
         try {
-            if (!checkUserHasGlobalManagerRole(userId.longValue())) {
+            if (!checkUserHasGlobalManagerRole(userId)) {
                 return AjaxSupportHelper.createAndLogError(request.getType(), ROLE_ERROR,
                         "The user should have global manager role.", "SetScorecardStatus. " + "User id : " + userId);
             }
@@ -185,7 +185,7 @@ public class SetScorecardStatusHandler extends CommonHandler {
         }
 
         // get the scorecard from the manager
-        Scorecard card = null;
+        Scorecard card;
         try {
             card = this.scorecardManager.getScorecard(scorecardId);
         } catch (PersistenceException e1) {
@@ -216,7 +216,7 @@ public class SetScorecardStatusHandler extends CommonHandler {
                     + scorecardId + "\tstatus" + status, e);
         }
 
-        return AjaxSupportHelper.createAndLogSucceess(request.getType(), SUCCESS, "", null,
+        return AjaxSupportHelper.createAndLogSuccess(request.getType(), SUCCESS, "", null,
                 "SetScorecardStatus. User id : " + userId + "\tscorecard id : " + scorecardId);
     }
 
