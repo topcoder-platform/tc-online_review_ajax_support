@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2014 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -37,7 +37,7 @@ import com.topcoder.project.phases.PhaseType;
  *
  * @author topgear
  * @author assistant
- * @version 1.1
+ * @version 1.1.1
  */
 public class ResolveAppealHandler extends ReviewCommonHandler {
 
@@ -583,7 +583,7 @@ public class ResolveAppealHandler extends ReviewCommonHandler {
             // get scorecard
             Scorecard card = scorecardManager.getScorecard(scorecardId);
             // calculate the score
-            float score = calculationManager.getScore(card, review);
+            double score = calculationManager.getScore(card, review);
 
             review.setScore(score);
         } catch (Exception e) {
