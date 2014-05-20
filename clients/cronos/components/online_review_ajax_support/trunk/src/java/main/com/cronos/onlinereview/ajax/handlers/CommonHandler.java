@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2014 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -37,15 +37,9 @@ import com.topcoder.util.objectfactory.ObjectFactory;
  * @author topgear
  * @author assistant
  * @author George1
- * @version 1.1
+ * @version 1.1.2
  */
 public abstract class CommonHandler implements AjaxRequestHandler {
-
-    /**
-     * <p>A <code>String</code> providing the name of the resource property which is expected to provide the user ID.
-     * </p>
-     */
-    protected static final String EXTERNAL_REFERENCE_ID_PROPERTY = "External Reference ID";
 
     /**
      * The logger.
@@ -119,12 +113,7 @@ public abstract class CommonHandler implements AjaxRequestHandler {
         if (resource == null) {
             throw new IllegalArgumentException("The resource can't be null.");
         }
-        // check if "External Reference ID" property exists or not
-        String value = (String) resource.getProperty(EXTERNAL_REFERENCE_ID_PROPERTY);
-        if (value == null) {
-            return false;
-        }
-        return value.equals(Long.toString(userId));
+        return resource.getUserId() != null && resource.getUserId().equals(userId);
     }
 
     /**
@@ -173,13 +162,9 @@ public abstract class CommonHandler implements AjaxRequestHandler {
         // build the search filter
         Filter noProjectFilter = ResourceFilterBuilder.createNoProjectFilter();
         Filter resourceRoleIdFilter = ResourceFilterBuilder.createResourceRoleIdFilter(managerRoleId);
-        Filter extensionPropertyNameFilter
-            = ResourceFilterBuilder.createExtensionPropertyNameFilter(EXTERNAL_REFERENCE_ID_PROPERTY);
-        Filter extensionPropertyValueFilter
-            = ResourceFilterBuilder.createExtensionPropertyValueFilter(Long.toString(userId));
+        Filter userIdFilter = ResourceFilterBuilder.createUserIdFilter(userId);
 
-        Filter bundle = new AndFilter(Arrays.asList(noProjectFilter, resourceRoleIdFilter,
-                extensionPropertyNameFilter, extensionPropertyValueFilter));
+        Filter bundle = new AndFilter(Arrays.asList(noProjectFilter, resourceRoleIdFilter, userIdFilter));
 
         // find the resources using the bundle
         try {
