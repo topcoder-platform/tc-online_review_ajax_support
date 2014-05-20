@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 TopCoder Inc., All Rights Reserved.
+ * Copyright (C) 2006-2014 TopCoder Inc., All Rights Reserved.
  */
 package com.cronos.onlinereview.ajax.handlers;
 
@@ -28,7 +28,7 @@ import com.topcoder.management.resource.search.ResourceFilterBuilder;
  * </p>
  *
  * @author topgear, assistant, VolodymyrK
- * @version 1.1
+ * @version 1.1.2
  */
 public class SetTimelineNotificationHandler extends CommonHandler {
 
@@ -175,8 +175,7 @@ public class SetTimelineNotificationHandler extends CommonHandler {
             // get the project's resources
             Resource[] resources = getResourceManager().searchResources(ResourceFilterBuilder.createProjectIdFilter(projectId));
             for (Resource resource : resources) {
-                String paymentStr = (String) resource.getProperty("External Reference ID");
-                if (String.valueOf(userId.longValue()).equals(paymentStr)) {
+                if (userId != null && userId.equals(resource.getUserId())) {
                     accessible = true;
                     break;
                 }
